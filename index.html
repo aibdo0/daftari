@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0f0e0c">
+<title>دفتري</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0e0c;--bg2:#1a1916;--bg3:#222018;--surface:#2a2825;--surface2:#323028;
+  --accent:#c9a84c;--accent2:#e8c97a;
+  --text:#f0ead8;--text2:#a09880;--text3:#6b6455;
+  --danger:#c0392b;--success:#27ae60;
+  --r:12px;--rs:8px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;overflow:hidden}
+
+/* ===== LOCK SCREEN ===== */
+#lockScreen{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;z-index:999;
+}
+.lock-logo{font-family:'Amiri',serif;font-size:42px;color:var(--accent)}
+.lock-sub{font-size:13px;color:var(--text3);margin-top:-10px}
+.lock-icon-wrap{font-size:52px;color:var(--text3);margin-bottom:4px}
+.pin-dots{display:flex;gap:14px;margin:8px 0 4px}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--text3);background:transparent;transition:all .2s}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);transform:scale(1.1)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+.pin-key{
+  width:76px;height:76px;border-radius:50%;
+  border:0.5px solid #3a3830;background:var(--surface);
+  color:var(--text);font-size:24px;font-family:'Cairo',sans-serif;font-weight:500;
+  cursor:pointer;transition:all .15s;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.pin-key:hover{background:var(--surface2);border-color:var(--accent)}
+.pin-key:active{transform:scale(.9);background:rgba(201,168,76,.3)}
+.pin-key .sub{font-size:9px;color:var(--text3);letter-spacing:1.5px;margin-top:2px}
+.pin-key.del-key{color:var(--text2)}
+.pin-key.ok-key{background:rgba(201,168,76,.15);border-color:var(--accent);color:var(--accent)}
+.pin-err{font-size:13px;color:var(--danger);min-height:20px;text-align:center}
+.change-pin-hint{font-size:11px;color:var(--text3);cursor:pointer;text-decoration:underline;margin-top:4px}
+.change-pin-hint:hover{color:var(--text2)}
+
+/* ===== APP SHELL ===== */
+#appShell{display:none;height:100vh;flex-direction:column}
+#appShell.show{display:flex}
+
+.topbar{
+  padding:12px 16px;border-bottom:0.5px solid #2a2825;
+  display:flex;align-items:center;gap:10px;background:var(--bg2);
+  flex-shrink:0;
+}
+.topbar-logo{font-family:'Amiri',serif;font-size:22px;color:var(--accent);flex:1}
+.topbar-count{font-size:11px;color:var(--text3)}
+.save-badge{font-size:11px;color:var(--success);opacity:0;transition:opacity .4s}
+.save-badge.show{opacity:1}
+.icon-btn{
+  width:34px;height:34px;border-radius:var(--rs);
+  border:0.5px solid #3a3830;background:none;color:var(--text2);
+  font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.icon-btn:hover{background:var(--surface);color:var(--text)}
+.icon-btn.active-pin{color:var(--accent);border-color:var(--accent);background:rgba(201,168,76,.12)}
+
+.body-area{flex:1;display:flex;overflow:hidden}
+
+/* ===== SIDEBAR ===== */
+.sidebar{
+  width:260px;border-left:0.5px solid #2a2825;
+  background:var(--bg2);display:flex;flex-direction:column;
+  flex-shrink:0;transition:transform .25s;
+}
+.search-wrap{padding:12px;border-bottom:0.5px solid #2a2825}
+.search-wrap input{
+  width:100%;padding:8px 12px;
+  background:var(--surface);border:0.5px solid #3a3830;
+  border-radius:var(--rs);color:var(--text);
+  font-size:13px;font-family:'Cairo',sans-serif;
+}
+.search-wrap input::placeholder{color:var(--text3)}
+.search-wrap input:focus{outline:none;border-color:var(--accent)}
+.cats-row{
+  padding:10px 12px;display:flex;gap:6px;flex-wrap:wrap;
+  border-bottom:0.5px solid #2a2825;
+}
+.cat-chip{
+  padding:3px 10px;border-radius:20px;font-size:11px;cursor:pointer;
+  border:0.5px solid transparent;color:var(--text3);background:var(--surface);
+  transition:all .15s;
+}
+.cat-chip:hover{color:var(--text2)}
+.cat-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(201,168,76,.1)}
+.notes-list{flex:1;overflow-y:auto;padding:8px}
+.notes-list::-webkit-scrollbar{width:3px}
+.notes-list::-webkit-scrollbar-thumb{background:#3a3830;border-radius:3px}
+.note-card{
+  padding:11px 12px;border-radius:var(--rs);cursor:pointer;
+  margin-bottom:5px;border:0.5px solid transparent;transition:all .15s;
+}
+.note-card:hover{background:var(--surface);border-color:#3a3830}
+.note-card.active{background:var(--surface);border-color:var(--accent)}
+.nc-title{font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc-preview{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc-meta{font-size:10px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:6px}
+.cat-dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.new-btn{
+  margin:10px;padding:10px;border-radius:var(--rs);
+  border:0.5px dashed #3a3830;background:none;
+  color:var(--text3);font-size:13px;font-family:'Cairo',sans-serif;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:all .15s;
+}
+.new-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(201,168,76,.05)}
+
+/* ===== EDITOR ===== */
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.empty-editor{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;color:var(--text3);
+}
+.empty-editor i{font-size:44px}
+.empty-editor p{font-size:14px}
+#editorWrap{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.editor-top{
+  padding:10px 16px;border-bottom:0.5px solid #2a2825;
+  display:flex;align-items:center;gap:8px;background:var(--bg2);flex-shrink:0;
+}
+.cat-select{
+  padding:5px 10px;border-radius:20px;
+  border:0.5px solid #3a3830;background:var(--surface);
+  color:var(--text2);font-size:12px;font-family:'Cairo',sans-serif;cursor:pointer;
+}
+.cat-select:focus{outline:none;border-color:var(--accent)}
+.char-count{font-size:11px;color:var(--text3);margin-right:auto}
+.editor-title-input{
+  width:100%;padding:16px 20px 8px;
+  background:transparent;border:none;outline:none;
+  font-size:22px;font-family:'Amiri',serif;color:var(--text);
+  flex-shrink:0;
+}
+.editor-title-input::placeholder{color:var(--text3)}
+.editor-body-input{
+  flex:1;width:100%;padding:8px 20px 16px;
+  background:transparent;border:none;outline:none;resize:none;
+  font-size:15px;font-family:'Cairo',sans-serif;color:var(--text);
+  line-height:2;overflow-y:auto;
+}
+.editor-body-input::placeholder{color:var(--text3)}
+.editor-body-input::-webkit-scrollbar{width:3px}
+.editor-body-input::-webkit-scrollbar-thumb{background:#3a3830;border-radius:3px}
+.editor-footer{
+  padding:8px 18px;border-top:0.5px solid #2a2825;
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--bg2);flex-shrink:0;
+}
+.footer-info{font-size:11px;color:var(--text3)}
+.del-btn{
+  padding:5px 12px;border-radius:var(--rs);
+  border:0.5px solid #5a2020;background:none;
+  color:#c0392b;font-size:12px;font-family:'Cairo',sans-serif;cursor:pointer;
+  display:flex;align-items:center;gap:5px;transition:all .15s;
+}
+.del-btn:hover{background:rgba(192,57,43,.15)}
+
+/* ===== CHANGE PIN MODAL ===== */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);
+  display:flex;align-items:center;justify-content:center;z-index:200;
+}
+.modal{
+  background:var(--bg2);border:0.5px solid #3a3830;border-radius:var(--r);
+  padding:28px 32px;display:flex;flex-direction:column;gap:14px;
+  min-width:280px;max-width:90vw;
+}
+.modal h3{font-family:'Amiri',serif;font-size:20px;color:var(--accent)}
+.modal input{
+  padding:10px 14px;background:var(--surface);border:0.5px solid #3a3830;
+  border-radius:var(--rs);color:var(--text);font-size:15px;
+  font-family:'Cairo',sans-serif;text-align:center;width:100%;
+}
+.modal input:focus{outline:none;border-color:var(--accent)}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{
+  flex:1;padding:9px;border-radius:var(--rs);
+  font-size:13px;font-family:'Cairo',sans-serif;cursor:pointer;
+  border:0.5px solid #3a3830;background:var(--surface);color:var(--text);
+  transition:all .15s;
+}
+.modal-btns button.primary{background:var(--accent);color:#000;border-color:var(--accent)}
+.modal-btns button:hover{opacity:.85}
+.modal-err{font-size:12px;color:var(--danger);min-height:16px}
+
+/* ===== MOBILE ===== */
+@media(max-width:640px){
+  .sidebar{
+    position:absolute;inset:49px 0 0 0;z-index:50;width:100%;
+    transform:translateX(110%);
+  }
+  .sidebar.open{transform:translateX(0)}
+  .editor{display:flex}
+}
+</style>
+</head>
+<body>
+
+<!-- LOCK SCREEN -->
+<div id="lockScreen">
+  <div class="lock-icon-wrap"><i class="ti ti-notebook"></i></div>
+  <div class="lock-logo">دفتري</div>
+  <div class="lock-sub">ملاحظاتك الخاصة</div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div>
+    <div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div>
+    <div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="pin-pad" id="pinPad"></div>
+  <div class="pin-err" id="pinErr"></div>
+  <div class="change-pin-hint" onclick="showChangePinModal(true)">تغيير رقم السر</div>
+</div>
+
+<!-- APP SHELL -->
+<div id="appShell">
+  <div class="topbar">
+    <button class="icon-btn" id="menuBtn" onclick="toggleSidebar()" aria-label="القائمة">
+      <i class="ti ti-menu-2"></i>
+    </button>
+    <div class="topbar-logo">دفتري</div>
+    <div class="topbar-count" id="topCount"></div>
+    <div class="save-badge" id="saveBadge">✓ تم الحفظ</div>
+    <button class="icon-btn" onclick="showChangePinModal(false)" title="تغيير الرقم السري" aria-label="تغيير الرقم السري">
+      <i class="ti ti-settings"></i>
+    </button>
+    <button class="icon-btn" onclick="lockApp()" title="قفل" aria-label="قفل">
+      <i class="ti ti-lock"></i>
+    </button>
+  </div>
+  <div class="body-area">
+    <div class="sidebar" id="sidebar">
+      <div class="search-wrap">
+        <input type="search" id="searchInp" placeholder="بحث..." oninput="renderList()" />
+      </div>
+      <div class="cats-row" id="catsRow"></div>
+      <div class="notes-list" id="notesList"></div>
+      <button class="new-btn" onclick="newNote()">
+        <i class="ti ti-plus"></i> ملاحظة جديدة
+      </button>
+    </div>
+    <div class="editor" id="editorArea">
+      <div class="empty-editor" id="emptyEditor">
+        <i class="ti ti-feather"></i>
+        <p>اختر ملاحظة أو أنشئ واحدة جديدة</p>
+      </div>
+      <div id="editorWrap" style="display:none">
+        <div class="editor-top">
+          <button class="icon-btn" id="pinBtn" onclick="togglePin()" title="تثبيت" aria-label="تثبيت">
+            <i class="ti ti-star"></i>
+          </button>
+          <select class="cat-select" id="catSelect" onchange="setCategory()">
+            <option value="">— بدون تصنيف</option>
+            <option value="دين">دين</option>
+            <option value="شخصي">شخصي</option>
+            <option value="أفكار">أفكار</option>
+            <option value="مهام">مهام</option>
+            <option value="قناة">قناة</option>
+          </select>
+          <span class="char-count" id="charCount"></span>
+        </div>
+        <input class="editor-title-input" id="noteTitleInp" placeholder="العنوان..." oninput="autoSave()" />
+        <textarea class="editor-body-input" id="noteBodyInp" placeholder="اكتب هنا...&#10;&#10;الملاحظات بتتحفظ تلقائياً 💾" oninput="autoSave()"></textarea>
+        <div class="editor-footer">
+          <span class="footer-info" id="footerInfo"></span>
+          <button class="del-btn" onclick="deleteNote()">
+            <i class="ti ti-trash" style="font-size:13px"></i> حذف
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PIN MODAL -->
+<div class="modal-overlay" id="pinModal" style="display:none">
+  <div class="modal">
+    <h3>تغيير رقم السر</h3>
+    <div id="oldPinRow">
+      <input type="password" id="oldPinInp" placeholder="الرقم الحالي" maxlength="10" />
+    </div>
+    <input type="password" id="newPinInp" placeholder="الرقم الجديد (4 أرقام على الأقل)" maxlength="10" />
+    <input type="password" id="confirmPinInp" placeholder="تأكيد الرقم الجديد" maxlength="10" />
+    <div class="modal-err" id="pinModalErr"></div>
+    <div class="modal-btns">
+      <button onclick="closeChangePinModal()">إلغاء</button>
+      <button class="primary" onclick="savePinChange()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== STATE =====
+const STORAGE_KEY = 'daftari_notes_v2';
+const PIN_KEY = 'daftari_pin';
+const DEFAULT_PIN = '1234';
+
+let notes = [];
+let currentId = null;
+let activeCat = 'الكل';
+let pinEntry = '';
+let saveTimer = null;
+let sidebarOpen = false;
+let changePinFromLock = false;
+
+const CAT_COLORS = {
+  'دين':'#c9a84c','شخصي':'#5DCAA5','أفكار':'#85B7EB',
+  'مهام':'#F0997B','قناة':'#AFA9EC','':`#555`
+};
+
+// ===== PIN =====
+function getPin(){ return localStorage.getItem(PIN_KEY) || DEFAULT_PIN; }
+function setPin(p){ localStorage.setItem(PIN_KEY, p); }
+
+function buildPinPad(){
+  const pad = document.getElementById('pinPad');
+  pad.innerHTML = '';
+  const keys = [
+    {k:'1',s:''},   {k:'2',s:'ABC'}, {k:'3',s:'DEF'},
+    {k:'4',s:'GHI'},{k:'5',s:'JKL'},{k:'6',s:'MNO'},
+    {k:'7',s:'PQRS'},{k:'8',s:'TUV'},{k:'9',s:'WXYZ'},
+    {k:'⌫',s:''},{k:'0',s:''},{k:'✓',s:''}
+  ];
+  keys.forEach(({k,s})=>{
+    const btn = document.createElement('button');
+    btn.className = 'pin-key' + (k==='⌫'?' del-key':k==='✓'?' ok-key':'');
+    if(k==='⌫') btn.innerHTML = '<i class="ti ti-backspace"></i>';
+    else if(k==='✓') btn.innerHTML = '<i class="ti ti-check"></i>';
+    else btn.innerHTML = k + (s?`<span class="sub">${s}</span>`:'');
+    btn.setAttribute('aria-label', k);
+    btn.onclick = ()=> handlePin(k);
+    pad.appendChild(btn);
+  });
+}
+
+function handlePin(k){
+  const err = document.getElementById('pinErr');
+  err.textContent = '';
+  if(k==='⌫'){ pinEntry = pinEntry.slice(0,-1); }
+  else if(k==='✓'){ checkPin(); return; }
+  else if(pinEntry.length < 10){ pinEntry += k; }
+  updateDots();
+  if(pinEntry.length === 4) setTimeout(checkPin, 150);
+}
+
+function updateDots(){
+  for(let i=0;i<4;i++){
+    const d = document.getElementById('d'+i);
+    if(d) d.classList.toggle('filled', i < pinEntry.length);
+  }
+}
+
+function checkPin(){
+  if(pinEntry === getPin()){
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('appShell').classList.add('show');
+    loadNotes();
+    renderCats();
+    renderList();
+  } else {
+    document.getElementById('pinErr').textContent = 'رقم السر غلط، حاول تاني';
+    pinEntry = '';
+    updateDots();
+    setTimeout(()=> document.getElementById('pinErr').textContent = '', 2000);
+  }
+}
+
+function lockApp(){
+  pinEntry = '';
+  updateDots();
+  document.getElementById('appShell').classList.remove('show');
+  document.getElementById('lockScreen').style.display = 'flex';
+  currentId = null;
+  document.getElementById('editorWrap').style.display = 'none';
+  document.getElementById('emptyEditor').style.display = 'flex';
+  sidebarOpen = false;
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ===== CHANGE PIN MODAL =====
+function showChangePinModal(fromLock){
+  changePinFromLock = fromLock;
+  document.getElementById('oldPinRow').style.display = fromLock ? 'none' : 'block';
+  document.getElementById('oldPinInp').value = '';
+  document.getElementById('newPinInp').value = '';
+  document.getElementById('confirmPinInp').value = '';
+  document.getElementById('pinModalErr').textContent = '';
+  document.getElementById('pinModal').style.display = 'flex';
+}
+
+function closeChangePinModal(){
+  document.getElementById('pinModal').style.display = 'none';
+}
+
+function savePinChange(){
+  const oldInp = document.getElementById('oldPinInp').value;
+  const newPin = document.getElementById('newPinInp').value;
+  const confirm = document.getElementById('confirmPinInp').value;
+  const err = document.getElementById('pinModalErr');
+
+  if(!changePinFromLock && oldInp !== getPin()){
+    err.textContent = 'الرقم الحالي غلط';
+    return;
+  }
+  if(newPin.length < 4){ err.textContent = 'الرقم لازم 4 أرقام على الأقل'; return; }
+  if(newPin !== confirm){ err.textContent = 'الرقمان مش متطابقان'; return; }
+
+  setPin(newPin);
+  closeChangePinModal();
+
+  if(changePinFromLock){
+    pinEntry = '';
+    updateDots();
+    showToast('تم تغيير الرقم السري ✓');
+  } else {
+    showToast('تم تغيير الرقم السري ✓');
+  }
+}
+
+// ===== NOTES STORAGE =====
+function loadNotes(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    notes = raw ? JSON.parse(raw) : getDefaultNotes();
+  } catch(e){ notes = getDefaultNotes(); }
+}
+
+function saveNotes(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    showSaveBadge();
+  } catch(e){}
+}
+
+function getDefaultNotes(){
+  return [
+    {
+      id:1, title:'أذكار الصباح',
+      body:'اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور\n\nسبحان الله وبحمده سبحان الله العظيم',
+      cat:'دين', pinned:true, date:new Date().toISOString()
+    },
+    {
+      id:2, title:'مرحباً بيك في دفترك 👋',
+      body:'هنا تقدر تكتب أي حاجة خاصة بيك.\n\nالملاحظات بتتحفظ تلقائياً في المتصفح على جهازك.\n\nبالتوفيق!',
+      cat:'', pinned:false, date:new Date().toISOString()
+    }
+  ];
+}
+
+// ===== RENDER =====
+function renderCats(){
+  const existing = new Set(notes.map(n=>n.cat).filter(Boolean));
+  const all = ['الكل', 'دين','شخصي','أفكار','مهام','قناة'].filter(c=> c==='الكل' || existing.has(c));
+  if(existing.size === 0 || !existing.has(activeCat)) activeCat = 'الكل';
+
+  const row = document.getElementById('catsRow');
+  row.innerHTML = '';
+  all.forEach(c=>{
+    const el = document.createElement('span');
+    el.className = 'cat-chip' + (c===activeCat?' active':'');
+    el.textContent = c;
+    el.onclick = ()=>{ activeCat=c; renderCats(); renderList(); };
+    row.appendChild(el);
+  });
+}
+
+function renderList(){
+  const q = (document.getElementById('searchInp').value||'').toLowerCase();
+  let list = notes.filter(n=>{
+    const mq = !q || n.title.toLowerCase().includes(q) || n.body.toLowerCase().includes(q);
+    const mc = activeCat==='الكل' || n.cat===activeCat;
+    return mq && mc;
+  });
+  list.sort((a,b)=> (b.pinned?1:0)-(a.pinned?1:0) || new Date(b.date)-new Date(a.date));
+
+  const el = document.getElementById('notesList');
+  el.innerHTML = '';
+
+  if(!list.length){
+    el.innerHTML = '<p style="font-size:12px;color:var(--text3);padding:20px;text-align:center">لا توجد ملاحظات</p>';
+    return;
+  }
+
+  list.forEach(n=>{
+    const d = document.createElement('div');
+    d.className = 'note-card' + (n.id===currentId?' active':'');
+    const preview = n.body.replace(/\n/g,' ').slice(0,50)||'—';
+    const dateStr = new Date(n.date).toLocaleDateString('ar-EG',{month:'short',day:'numeric'});
+    const dot = CAT_COLORS[n.cat]||'#555';
+    d.innerHTML = `
+      <div class="nc-title">${n.pinned?'<i class="ti ti-star" style="color:var(--accent);font-size:11px"></i> ':''}<span>${escHtml(n.title)||'بدون عنوان'}</span></div>
+      <div class="nc-preview">${escHtml(preview)}</div>
+      <div class="nc-meta">
+        <span class="cat-dot" style="background:${dot}"></span>
+        <span>${dateStr}</span>
+        ${n.cat?`<span style="color:${dot}">${n.cat}</span>`:''}
+      </div>`;
+    d.onclick = ()=> openNote(n.id);
+    el.appendChild(d);
+  });
+
+  document.getElementById('topCount').textContent = notes.length + ' ملاحظة';
+}
+
+function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ===== EDITOR =====
+function openNote(id){
+  currentId = id;
+  const n = notes.find(x=>x.id===id);
+  if(!n) return;
+
+  document.getElementById('emptyEditor').style.display = 'none';
+  document.getElementById('editorWrap').style.display = 'flex';
+  document.getElementById('editorWrap').style.flexDirection = 'column';
+  document.getElementById('editorWrap').style.flex = '1';
+  document.getElementById('editorWrap').style.overflow = 'hidden';
+
+  document.getElementById('noteTitleInp').value = n.title;
+  document.getElementById('noteBodyInp').value = n.body;
+  document.getElementById('catSelect').value = n.cat||'';
+  updatePinBtn(n.pinned);
+  updateFooter(n);
+  updateCharCount(n.body);
+  renderList();
+
+  // mobile: close sidebar
+  if(window.innerWidth <= 640){
+    sidebarOpen = false;
+    document.getElementById('sidebar').classList.remove('open');
+  }
+}
+
+function autoSave(){
+  if(!currentId) return;
+  clearTimeout(saveTimer);
+  updateCharCount(document.getElementById('noteBodyInp').value);
+  saveTimer = setTimeout(()=>{
+    const n = notes.find(x=>x.id===currentId);
+    if(!n) return;
+    n.title = document.getElementById('noteTitleInp').value;
+    n.body = document.getElementById('noteBodyInp').value;
+    n.date = new Date().toISOString();
+    updateFooter(n);
+    renderList();
+    saveNotes();
+  }, 700);
+}
+
+function setCategory(){
+  if(!currentId) return;
+  const n = notes.find(x=>x.id===currentId);
+  if(!n) return;
+  n.cat = document.getElementById('catSelect').value;
+  renderList(); renderCats();
+  saveNotes();
+}
+
+function togglePin(){
+  if(!currentId) return;
+  const n = notes.find(x=>x.id===currentId);
+  if(!n) return;
+  n.pinned = !n.pinned;
+  updatePinBtn(n.pinned);
+  renderList(); saveNotes();
+}
+
+function updatePinBtn(pinned){
+  const btn = document.getElementById('pinBtn');
+  if(pinned){
+    btn.classList.add('active-pin');
+  } else {
+    btn.classList.remove('active-pin');
+  }
+}
+
+function updateFooter(n){
+  const words = (n.body||'').trim().split(/\s+/).filter(Boolean).length;
+  const d = new Date(n.date).toLocaleString('ar-EG',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('footerInfo').textContent = `${words} كلمة · ${d}`;
+}
+
+function updateCharCount(text){
+  const chars = (text||'').length;
+  const words = (text||'').trim().split(/\s+/).filter(Boolean).length;
+  document.getElementById('charCount').textContent = `${words} كلمة`;
+}
+
+function newNote(){
+  const id = Date.now();
+  notes.unshift({id, title:'', body:'', cat:'', pinned:false, date:new Date().toISOString()});
+  saveNotes();
+  openNote(id);
+  setTimeout(()=> document.getElementById('noteTitleInp').focus(), 80);
+}
+
+function deleteNote(){
+  if(!currentId) return;
+  if(!confirm('هل تريد حذف هذه الملاحظة؟')) return;
+  notes = notes.filter(x=>x.id!==currentId);
+  currentId = null;
+  saveNotes();
+  document.getElementById('editorWrap').style.display = 'none';
+  document.getElementById('emptyEditor').style.display = 'flex';
+  renderList(); renderCats();
+}
+
+// ===== UI HELPERS =====
+function toggleSidebar(){
+  sidebarOpen = !sidebarOpen;
+  document.getElementById('sidebar').classList.toggle('open', sidebarOpen);
+}
+
+function showSaveBadge(){
+  const b = document.getElementById('saveBadge');
+  b.classList.add('show');
+  setTimeout(()=> b.classList.remove('show'), 1800);
+}
+
+function showToast(msg){
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--surface2);color:var(--accent);padding:10px 20px;border-radius:var(--r);font-size:13px;font-family:Cairo,sans-serif;z-index:999;border:0.5px solid var(--accent);';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(()=> t.remove(), 2500);
+}
+
+// close modal on overlay click
+document.getElementById('pinModal').addEventListener('click', function(e){
+  if(e.target === this) closeChangePinModal();
+});
+
+// keyboard support for pin
+document.addEventListener('keydown', e=>{
+  const lock = document.getElementById('lockScreen');
+  if(lock.style.display === 'none') return;
+  if(e.key >= '0' && e.key <= '9') handlePin(e.key);
+  else if(e.key === 'Backspace') handlePin('⌫');
+  else if(e.key === 'Enter') handlePin('✓');
+});
+
+// ===== INIT =====
+buildPinPad();
+</script>
+</body>
+</html>
